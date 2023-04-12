@@ -1,11 +1,11 @@
+import os
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
+from dotenv import load_dotenv
 from ..models import model as user_model
 
-SECRET_KEY = '38ca1a37ee75db75aad79c6195a987cbd0cd3e75'
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
+load_dotenv()
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

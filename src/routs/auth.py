@@ -1,6 +1,12 @@
 from typing import Annotated
-from fastapi import Depends, APIRouter
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import APIRouter, Depends, HTTPException, status
+from datetime import timedelta
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from ..dependencies.user import *
+from ..models import schema as user_schema
+from ..models import model as user_model
+from ..models.config import conn
+from ..models.model import users
 
 api = APIRouter()
 
@@ -34,6 +40,18 @@ async def login_for_token(login_data: user_schema.Login):
         data={"sub": user.username}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
+
+@api.post("/signup", response_model=user_schema.User, tags=["Authentication"])
+async def user_register(user_data: user_schema.User):
+    hashed_password = get_password_hash(user_data.password)
+    conn.execute(users.insert().values(
+        email = user_data.email,
+        first_name = user_data.first_name,
+        last_name = user_data.last_name,
+        hashed_password = hashed_password
+    ))
+    return conn.execute(users.select()).fetchall()
+
 
 @api.get("/users/me/", response_model=user_schema.User, tags=["Authentication"])
 async def read_users_me(current_user: user_schema.User = Depends(get_current_active_user)):
